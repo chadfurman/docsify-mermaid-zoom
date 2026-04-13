@@ -1,0 +1,38 @@
+{
+  "name": "docsify-mermaid-zoom",
+  "version": "1.0.0",
+  "description": "Interactive mermaid diagrams for docsify — zoom, pan, resize, and fullscreen",
+  "main": "dist/docsify-mermaid-zoom.js",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "mkdir -p dist && cp src/docsify-mermaid-zoom.js dist/ && cp src/docsify-mermaid-zoom.css dist/",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "docsify",
+    "docsify-plugin",
+    "mermaid",
+    "zoom",
+    "pan",
+    "fullscreen",
+    "interactive",
+    "diagrams",
+    "svg-pan-zoom"
+  ],
+  "author": "Chad Furman",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chadfurman/docsify-mermaid-zoom.git"
+  },
+  "homepage": "https://github.com/chadfurman/docsify-mermaid-zoom#readme",
+  "bugs": {
+    "url": "https://github.com/chadfurman/docsify-mermaid-zoom/issues"
+  },
+  "peerDependencies": {
+    "docsify": ">=4.0.0",
+    "mermaid": ">=10.0.0"
+  }
+}
