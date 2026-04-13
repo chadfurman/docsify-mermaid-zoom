@@ -107,6 +107,16 @@
       controls.appendChild(fullscreenBtn);
       container.appendChild(controls);
 
+      // Ensure clicking the diagram doesn't trap scroll/keyboard events
+      container.addEventListener('click', function() {
+        // Remove focus from the container so arrow keys scroll the page
+        if (document.activeElement === container || container.contains(document.activeElement)) {
+          container.blur();
+        }
+      });
+      // Make sure the container doesn't capture tabindex
+      container.setAttribute('tabindex', '-1');
+
       // Hint
       var hint = document.createElement('div');
       hint.className = 'mermaid-zoom-hint';
@@ -121,7 +131,7 @@
           controlIconsEnabled: false,
           mouseWheelZoomEnabled: false,
           preventMouseEventsDefault: true,
-          zoomScaleSensitivity: 0.3,
+          zoomScaleSensitivity: 0.15,
           minZoom: config.minZoom,
           maxZoom: config.maxZoom,
           fit: true,
@@ -134,7 +144,7 @@
         container.addEventListener('wheel', function (e) {
           if (!e.ctrlKey) return; // let normal scroll bubble to page
           e.preventDefault();
-          var direction = e.deltaY < 0 ? 1.1 : 0.9;
+          var direction = e.deltaY < 0 ? 1.05 : 0.95;
           panZoom.zoomBy(direction);
         }, { passive: false });
 

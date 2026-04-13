@@ -1,6 +1,9 @@
 {
-  "name": "docsify-mermaid-zoom",
-  "version": "1.0.0",
+  "name": "@chadfurman/docsify-mermaid-zoom",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.1.0",
   "description": "Interactive mermaid diagrams for docsify — zoom, pan, resize, and fullscreen",
   "main": "dist/docsify-mermaid-zoom.js",
   "files": [
