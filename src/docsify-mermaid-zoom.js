@@ -27,8 +27,15 @@
     minZoom: 0.1,
     maxZoom: 10,
     minHeight: 300,
-    maxHeight: 800
+    maxHeight: 800,
+    debug: false
   };
+
+  function log() {
+    if (getConfig().debug) {
+      console.log.apply(console, ['[mermaid-zoom]'].concat(Array.prototype.slice.call(arguments)));
+    }
+  }
 
   function getConfig() {
     var userConfig = (window.$docsify && window.$docsify.mermaidZoom) || {};
@@ -37,7 +44,8 @@
       minZoom: userConfig.minZoom || DEFAULTS.minZoom,
       maxZoom: userConfig.maxZoom || DEFAULTS.maxZoom,
       minHeight: userConfig.minHeight || DEFAULTS.minHeight,
-      maxHeight: userConfig.maxHeight || DEFAULTS.maxHeight
+      maxHeight: userConfig.maxHeight || DEFAULTS.maxHeight,
+      debug: userConfig.debug || DEFAULTS.debug
     };
   }
 
@@ -52,6 +60,7 @@
   function initZoomContainers() {
     var config = getConfig();
     var diagrams = document.querySelectorAll('.mermaid');
+    log('initZoomContainers called, found', diagrams.length, 'diagrams, config:', JSON.stringify(config));
 
     diagrams.forEach(function (el) {
       // Skip if already wrapped
@@ -107,30 +116,50 @@
       controls.appendChild(fullscreenBtn);
       container.appendChild(controls);
 
-      // Ensure clicking the diagram doesn't trap scroll/keyboard events
-      container.addEventListener('click', function() {
-        // Remove focus from the container so arrow keys scroll the page
-        if (document.activeElement === container || container.contains(document.activeElement)) {
-          container.blur();
+      // Focus model: click diagram to focus it (scroll pans, arrows pan).
+      // ESC or click outside to release. Fullscreen always focused.
+      container.setAttribute('tabindex', '0');
+      var focused = false;
+
+      function setFocused(val) {
+        focused = val;
+        container.classList.toggle('focused', val);
+        log('focus changed:', val);
+      }
+
+      container.addEventListener('click', function (e) {
+        // Don't focus if clicking a control button
+        if (e.target.closest && e.target.closest('.mermaid-zoom-controls')) return;
+        if (!focused) {
+          container.focus();
+          setFocused(true);
+          log('diagram focused via click');
         }
       });
-      // Make sure the container doesn't capture tabindex
-      container.setAttribute('tabindex', '-1');
+
+      container.addEventListener('blur', function () {
+        // Don't unfocus if in fullscreen
+        if (!container.classList.contains('fullscreen')) {
+          setFocused(false);
+          log('diagram blurred');
+        }
+      });
 
       // Hint
       var hint = document.createElement('div');
       hint.className = 'mermaid-zoom-hint';
-      hint.textContent = 'Pinch or Ctrl+scroll to zoom \u00B7 Drag to pan \u00B7 Resize from corner';
+      hint.textContent = 'Click to interact \u00B7 Pinch to zoom \u00B7 ESC to release';
       container.appendChild(hint);
 
       // Initialize svg-pan-zoom
       try {
+        log('initializing svg-pan-zoom');
         var panZoom = svgPanZoom(svg, {
           zoomEnabled: true,
           panEnabled: true,
           controlIconsEnabled: false,
           mouseWheelZoomEnabled: false,
-          preventMouseEventsDefault: true,
+          preventMouseEventsDefault: false,
           zoomScaleSensitivity: 0.15,
           minZoom: config.minZoom,
           maxZoom: config.maxZoom,
@@ -139,14 +168,60 @@
           contain: false
         });
 
-        // Custom wheel handler: only zoom on pinch (ctrlKey) or Ctrl+scroll.
-        // Regular two-finger scroll passes through to the page.
+        // Wheel handler:
+        // - Pinch (ctrlKey): zoom
+        // - Focused: pan the diagram
+        // - Not focused: scroll the page
+        var PAN_SPEED = 3;
         container.addEventListener('wheel', function (e) {
-          if (!e.ctrlKey) return; // let normal scroll bubble to page
-          e.preventDefault();
-          var direction = e.deltaY < 0 ? 1.05 : 0.95;
-          panZoom.zoomBy(direction);
+          // Pinch-to-zoom (ctrlKey) always works regardless of focus
+          if (e.ctrlKey) {
+            e.preventDefault();
+            var direction = e.deltaY < 0 ? 1.05 : 0.95;
+            log('pinch zoom by', direction);
+            panZoom.zoomBy(direction);
+            return;
+          }
+          // When focused: scroll pans the diagram
+          if (focused || container.classList.contains('fullscreen')) {
+            e.preventDefault();
+            panZoom.panBy({ x: -e.deltaX * PAN_SPEED, y: -e.deltaY * PAN_SPEED });
+            log('pan by', -e.deltaX * PAN_SPEED, -e.deltaY * PAN_SPEED);
+            return;
+          }
+          // Not focused: let scroll bubble to page
+          log('not focused, scroll passes through');
         }, { passive: false });
+
+        // Arrow keys pan the diagram when focused
+        container.addEventListener('keydown', function (e) {
+          var PAN_STEP = 40;
+          // ESC: unfocus (or exit fullscreen)
+          if (e.key === 'Escape') {
+            if (container.classList.contains('fullscreen')) {
+              fullscreenBtn.click();
+            } else {
+              container.blur();
+              setFocused(false);
+            }
+            e.preventDefault();
+            return;
+          }
+          // Arrow keys only when focused
+          if (!focused && !container.classList.contains('fullscreen')) return;
+          var handled = true;
+          switch (e.key) {
+            case 'ArrowUp':    panZoom.panBy({ x: 0, y: PAN_STEP }); break;
+            case 'ArrowDown':  panZoom.panBy({ x: 0, y: -PAN_STEP }); break;
+            case 'ArrowLeft':  panZoom.panBy({ x: PAN_STEP, y: 0 }); break;
+            case 'ArrowRight': panZoom.panBy({ x: -PAN_STEP, y: 0 }); break;
+            default: handled = false;
+          }
+          if (handled) {
+            e.preventDefault();
+            log('arrow pan:', e.key);
+          }
+        });
 
         // Force fit after layout settles
         setTimeout(function () {
@@ -180,19 +255,18 @@
           fullscreenBtn.textContent = isFullscreen ? '\u2716' : '\u26F6';
           fullscreenBtn.title = isFullscreen ? 'Exit fullscreen' : 'Fullscreen';
           document.body.style.overflow = isFullscreen ? 'hidden' : '';
-          if (!isFullscreen) container.style.height = savedHeight;
+          if (isFullscreen) {
+            container.focus();
+            setFocused(true);
+          } else {
+            container.style.height = savedHeight;
+            setFocused(false);
+          }
           setTimeout(function () {
             panZoom.resize();
             panZoom.fit();
             panZoom.center();
           }, 50);
-        });
-
-        // ESC to exit fullscreen
-        document.addEventListener('keydown', function (e) {
-          if (e.key === 'Escape' && container.classList.contains('fullscreen')) {
-            fullscreenBtn.click();
-          }
         });
 
         // Refit on window resize and container resize (draggable corner)

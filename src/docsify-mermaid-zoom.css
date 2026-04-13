@@ -29,6 +29,14 @@
   border-color: var(--mermaid-zoom-accent, #0F766E);
   box-shadow: 0 2px 8px rgba(15, 118, 110, 0.12);
 }
+.mermaid-zoom-container.focused {
+  border-color: var(--mermaid-zoom-accent, #0F766E);
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.25);
+  outline: none;
+}
+.mermaid-zoom-container:focus {
+  outline: none;
+}
 .mermaid-zoom-container svg {
   cursor: grab;
   max-width: none;

@@ -6,13 +6,15 @@ Interactive mermaid diagrams for [docsify](https://docsify.js.org/) — zoom, pa
 
 ## Features
 
-- **Pinch-to-zoom / Ctrl+scroll** on any mermaid diagram (regular scrolling passes through to the page)
+- **Click-to-focus interaction** — click a diagram to focus it. When focused: two-finger scroll pans the diagram, arrow keys navigate. ESC releases focus. Unfocused diagrams let scroll pass through to the page.
+- **Pinch-to-zoom / Ctrl+scroll** — always works regardless of focus state
 - **Click-and-drag to pan** with grab/grabbing cursor
 - **Resize handle** — drag the bottom-right corner to make the diagram taller/shorter
-- **Fullscreen mode** — expand any diagram to fill the viewport (ESC to exit)
+- **Fullscreen mode** — expand any diagram to fill the viewport (auto-focused, ESC to exit)
 - **Zoom controls** — +, -, reset buttons in the top-right corner
 - **Auto-fit** — diagrams fit and center on load, resize, and page navigation
-- **Configurable** — min/max zoom, container height limits, render delay
+- **Visual focus indicator** — teal outline ring shows when a diagram is active
+- **Configurable** — min/max zoom, container height limits, render delay, debug mode
 - **Graceful fallback** — if svg-pan-zoom fails, diagrams still render normally
 
 ## Install
