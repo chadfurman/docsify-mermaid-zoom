@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>docsify-mermaid-zoom</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="description" content="Interactive mermaid diagrams for docsify — zoom, pan, resize, and fullscreen">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <!-- Theme -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css">
+  <!-- Plugin CSS (jsDelivr CDN) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/chadfurman/docsify-mermaid-zoom@main/dist/docsify-mermaid-zoom.css">
+  <style>
+    :root {
+      --theme-color: #0F766E;
+      --sidebar-width: 240px;
+      --sidebar-nav-link-color--active: #0F766E;
+      --sidebar-nav-link-border-color--active: #0F766E;
+      --link-color: #0F766E;
+      --mermaid-zoom-accent: #0F766E;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">Loading...</div>
+  <script>
+    window.$docsify = {
+      name: 'docsify-mermaid-zoom',
+      repo: 'https://github.com/chadfurman/docsify-mermaid-zoom',
+      loadSidebar: true,
+      subMaxLevel: 2,
+      auto2top: true,
+      homepage: 'README.md',
+      mermaidZoom: {
+        maxHeight: 700
+      }
+    }
+  </script>
+  <!-- Core -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
+  <!-- Mermaid diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-mermaid@2/dist/docsify-mermaid.js"></script>
+  <script>mermaid.initialize({ startOnLoad: false, theme: 'default' });</script>
+  <!-- svg-pan-zoom -->
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <!-- Plugin JS (jsDelivr CDN) -->
+  <script src="https://cdn.jsdelivr.net/gh/chadfurman/docsify-mermaid-zoom@main/dist/docsify-mermaid-zoom.js"></script>
+</body>
+</html>

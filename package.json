@@ -4,7 +4,8 @@
   "description": "Interactive mermaid diagrams for docsify — zoom, pan, resize, and fullscreen",
   "main": "dist/docsify-mermaid-zoom.js",
   "files": [
-    "dist/"
+    "dist/",
+    "src/"
   ],
   "scripts": {
     "build": "mkdir -p dist && cp src/docsify-mermaid-zoom.js dist/ && cp src/docsify-mermaid-zoom.css dist/",

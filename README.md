@@ -6,7 +6,7 @@ Interactive mermaid diagrams for [docsify](https://docsify.js.org/) — zoom, pa
 
 ## Features
 
-- **Mouse wheel zoom** on any mermaid diagram
+- **Pinch-to-zoom / Ctrl+scroll** on any mermaid diagram (regular scrolling passes through to the page)
 - **Click-and-drag to pan** with grab/grabbing cursor
 - **Resize handle** — drag the bottom-right corner to make the diagram taller/shorter
 - **Fullscreen mode** — expand any diagram to fill the viewport (ESC to exit)

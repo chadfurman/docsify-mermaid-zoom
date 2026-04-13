@@ -110,7 +110,7 @@
       // Hint
       var hint = document.createElement('div');
       hint.className = 'mermaid-zoom-hint';
-      hint.textContent = 'Scroll to zoom \u00B7 Drag to pan \u00B7 Resize from corner';
+      hint.textContent = 'Pinch or Ctrl+scroll to zoom \u00B7 Drag to pan \u00B7 Resize from corner';
       container.appendChild(hint);
 
       // Initialize svg-pan-zoom
@@ -119,7 +119,7 @@
           zoomEnabled: true,
           panEnabled: true,
           controlIconsEnabled: false,
-          mouseWheelZoomEnabled: true,
+          mouseWheelZoomEnabled: false,
           preventMouseEventsDefault: true,
           zoomScaleSensitivity: 0.3,
           minZoom: config.minZoom,
@@ -128,6 +128,15 @@
           center: true,
           contain: false
         });
+
+        // Custom wheel handler: only zoom on pinch (ctrlKey) or Ctrl+scroll.
+        // Regular two-finger scroll passes through to the page.
+        container.addEventListener('wheel', function (e) {
+          if (!e.ctrlKey) return; // let normal scroll bubble to page
+          e.preventDefault();
+          var direction = e.deltaY < 0 ? 1.1 : 0.9;
+          panZoom.zoomBy(direction);
+        }, { passive: false });
 
         // Force fit after layout settles
         setTimeout(function () {
