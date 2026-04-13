@@ -1,14 +1,11 @@
 /**
- * docsify-mermaid-zoom
+ * docsify-mermaid-zoom v2.0.0
  *
  * Interactive mermaid diagrams for docsify — zoom, pan, resize, and fullscreen.
+ * Auto-loads mermaid and svg-pan-zoom from CDN if not already present.
+ * Inlines docsify-mermaid functionality — no separate docsify-mermaid package needed.
  *
- * Dependencies (load before this script):
- *   - mermaid (https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js)
- *   - docsify-mermaid (https://cdn.jsdelivr.net/npm/docsify-mermaid@2/dist/docsify-mermaid.js)
- *   - svg-pan-zoom (https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js)
- *
- * Usage:
+ * Usage (just two lines!):
  *   <link rel="stylesheet" href="docsify-mermaid-zoom.css">
  *   <script src="docsify-mermaid-zoom.js"></script>
  *
@@ -18,10 +15,47 @@
  *   - maxZoom: maximum zoom level (default: 10)
  *   - minHeight: minimum container height in px (default: 300)
  *   - maxHeight: maximum container height in px (default: 800)
+ *   - debug: enable console logging (default: false)
+ *   - mermaidConfig: object passed to mermaid.initialize() (default: {})
  */
 (function () {
   'use strict';
 
+  // ---------------------------------------------------------------------------
+  // Dependency auto-loader
+  // ---------------------------------------------------------------------------
+  var CDN_BASE = 'https://cdn.jsdelivr.net/npm/';
+  var DEPS = [
+    { name: 'mermaid', test: function () { return window.mermaid; }, url: CDN_BASE + 'mermaid@11/dist/mermaid.min.js' },
+    { name: 'svg-pan-zoom', test: function () { return window.svgPanZoom; }, url: CDN_BASE + 'svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js' }
+  ];
+
+  function loadScript(url) {
+    return new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = url;
+      script.onload = resolve;
+      script.onerror = function () { reject(new Error('Failed to load: ' + url)); };
+      document.head.appendChild(script);
+    });
+  }
+
+  function ensureDeps() {
+    var loads = [];
+    DEPS.forEach(function (dep) {
+      if (!dep.test()) {
+        log('auto-loading', dep.name, 'from', dep.url);
+        loads.push(loadScript(dep.url));
+      } else {
+        log(dep.name, 'already loaded');
+      }
+    });
+    return Promise.all(loads);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Configuration
+  // ---------------------------------------------------------------------------
   var DEFAULTS = {
     renderDelay: 300,
     minZoom: 0.1,
@@ -49,6 +83,9 @@
     };
   }
 
+  // ---------------------------------------------------------------------------
+  // UI helpers
+  // ---------------------------------------------------------------------------
   function createButton(text, title, ariaLabel) {
     var btn = document.createElement('button');
     btn.textContent = text;
@@ -57,6 +94,9 @@
     return btn;
   }
 
+  // ---------------------------------------------------------------------------
+  // Zoom container initialization (unchanged from v1.2)
+  // ---------------------------------------------------------------------------
   function initZoomContainers() {
     var config = getConfig();
     var diagrams = document.querySelectorAll('.mermaid');
@@ -289,16 +329,47 @@
     });
   }
 
-  // Docsify plugin registration
-  function mermaidZoomPlugin(hook) {
+  // ---------------------------------------------------------------------------
+  // Combined docsify plugin: mermaid rendering + zoom
+  // ---------------------------------------------------------------------------
+  function docsifyMermaidZoom(hook) {
+    // Render mermaid code blocks into divs (runs before mermaid processes them)
+    hook.afterEach(function (html) {
+      return html.replace(/<pre[^>]*><code[^>]*class="lang-mermaid"[^>]*>([\s\S]*?)<\/code><\/pre>/gi, function (match, code) {
+        return '<div class="mermaid">' + code.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') + '</div>';
+      });
+    });
+
     hook.doneEach(function () {
       var config = getConfig();
-      setTimeout(initZoomContainers, config.renderDelay);
+      ensureDeps().then(function () {
+        // Initialize mermaid if first load
+        if (window.mermaid && !window._mermaidZoomInitialized) {
+          var userMermaidConfig = (window.$docsify && window.$docsify.mermaidZoom && window.$docsify.mermaidZoom.mermaidConfig) || {};
+          mermaid.initialize(Object.assign({ startOnLoad: false, theme: 'default' }, userMermaidConfig));
+          window._mermaidZoomInitialized = true;
+          log('mermaid initialized');
+        }
+        // Run mermaid on unprocessed diagrams
+        var unprocessed = document.querySelectorAll('.mermaid:not([data-processed])');
+        if (unprocessed.length && window.mermaid) {
+          mermaid.run({ nodes: unprocessed }).then(function () {
+            setTimeout(initZoomContainers, config.renderDelay);
+          }).catch(function (err) {
+            log('mermaid.run error (still attempting zoom init):', err);
+            setTimeout(initZoomContainers, config.renderDelay);
+          });
+        }
+      }).catch(function (err) {
+        console.warn('docsify-mermaid-zoom: failed to load dependencies:', err);
+      });
     });
   }
 
-  // Register
+  // ---------------------------------------------------------------------------
+  // Register plugin
+  // ---------------------------------------------------------------------------
   if (!window.$docsify) window.$docsify = {};
   if (!window.$docsify.plugins) window.$docsify.plugins = [];
-  window.$docsify.plugins.push(mermaidZoomPlugin);
+  window.$docsify.plugins.push(docsifyMermaidZoom);
 })();

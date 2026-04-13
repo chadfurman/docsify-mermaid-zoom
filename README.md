@@ -14,45 +14,46 @@ Interactive mermaid diagrams for [docsify](https://docsify.js.org/) — zoom, pa
 - **Zoom controls** — +, -, reset buttons in the top-right corner
 - **Auto-fit** — diagrams fit and center on load, resize, and page navigation
 - **Visual focus indicator** — teal outline ring shows when a diagram is active
-- **Configurable** — min/max zoom, container height limits, render delay, debug mode
+- **Auto-loads dependencies** — mermaid and svg-pan-zoom are loaded from CDN automatically if not already present
+- **Configurable** — min/max zoom, container height limits, render delay, debug mode, mermaid config pass-through
 - **Graceful fallback** — if svg-pan-zoom fails, diagrams still render normally
 
 ## Install
 
 ### CDN (recommended for docsify)
 
-Add to your docsify `index.html`, after mermaid and docsify-mermaid:
+Just two lines in your docsify `index.html` — that's it:
 
 ```html
-<!-- CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-mermaid-zoom/dist/docsify-mermaid-zoom.css">
-
-<!-- Dependencies (load these first) -->
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify-mermaid@2/dist/docsify-mermaid.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-
-<!-- Plugin -->
-<script src="https://cdn.jsdelivr.net/npm/docsify-mermaid-zoom/dist/docsify-mermaid-zoom.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chadfurman/docsify-mermaid-zoom@2/dist/docsify-mermaid-zoom.css">
+<script src="https://cdn.jsdelivr.net/npm/@chadfurman/docsify-mermaid-zoom@2/dist/docsify-mermaid-zoom.js"></script>
 ```
+
+The plugin auto-loads mermaid and svg-pan-zoom from CDN if they aren't already on the page.
 
 ### npm
 
 ```bash
-npm install docsify-mermaid-zoom
+npm install @chadfurman/docsify-mermaid-zoom
 ```
 
-Then reference `node_modules/docsify-mermaid-zoom/dist/` in your HTML.
+Then reference `node_modules/@chadfurman/docsify-mermaid-zoom/dist/` in your HTML.
 
-## Dependencies
+### Manual setup (advanced)
 
-These must be loaded **before** docsify-mermaid-zoom:
+If you want to control exact dependency versions, load them yourself before the plugin. The plugin will detect they're already present and skip auto-loading:
 
-| Package | Purpose |
-|---------|---------|
-| [mermaid](https://mermaid.js.org/) | Renders mermaid markdown into SVG |
-| [docsify-mermaid](https://github.com/Leward/mermaid-docsify) | Hooks mermaid into docsify's rendering pipeline |
-| [svg-pan-zoom](https://github.com/bumbu/svg-pan-zoom) | Provides zoom/pan/fit on SVG elements |
+```html
+<!-- Dependencies (loaded manually) -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+
+<!-- Plugin (detects deps are already loaded, skips auto-load) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chadfurman/docsify-mermaid-zoom@2/dist/docsify-mermaid-zoom.css">
+<script src="https://cdn.jsdelivr.net/npm/@chadfurman/docsify-mermaid-zoom@2/dist/docsify-mermaid-zoom.js"></script>
+```
+
+> **Note:** As of v2.0, `docsify-mermaid` is no longer needed as a separate dependency — its functionality is inlined into this plugin.
 
 ## Configuration
 
@@ -67,11 +68,20 @@ Optional — configure via `window.$docsify.mermaidZoom`:
       minZoom: 0.1,       // minimum zoom level
       maxZoom: 10,        // maximum zoom level
       minHeight: 300,     // minimum container height (px)
-      maxHeight: 800      // maximum container height (px)
+      maxHeight: 800,     // maximum container height (px)
+      debug: false,       // enable [mermaid-zoom] console logs
+      mermaidConfig: {    // passed directly to mermaid.initialize()
+        theme: 'neutral',
+        flowchart: { curve: 'linear' }
+      }
     }
   }
 </script>
 ```
+
+### Mermaid config pass-through
+
+The `mermaidConfig` option is passed directly to `mermaid.initialize()` along with `{ startOnLoad: false, theme: 'default' }` as defaults. Any keys you provide will override the defaults. This is useful for setting mermaid themes, flowchart options, sequence diagram config, etc.
 
 ## Theming
 
@@ -85,12 +95,14 @@ The accent color used for hover borders and button highlights can be customized 
 
 ## How it works
 
-1. After each docsify page render, the plugin waits for mermaid to finish rendering SVGs
-2. Each `.mermaid` element gets wrapped in a `.mermaid-zoom-container` div
-3. The container is sized proportionally to the diagram's aspect ratio
-4. `svg-pan-zoom` is initialized on the SVG with fit + center
-5. Zoom controls, fullscreen button, and resize handle are added
-6. A `ResizeObserver` watches the container so dragging the resize handle re-fits the diagram
+1. The plugin registers a docsify `afterEach` hook that converts mermaid code blocks into `<div class="mermaid">` elements
+2. In the `doneEach` hook, it auto-loads mermaid and svg-pan-zoom from CDN (if not already present)
+3. Mermaid is initialized once, then `mermaid.run()` processes unrendered diagrams
+4. Each `.mermaid` element gets wrapped in a `.mermaid-zoom-container` div
+5. The container is sized proportionally to the diagram's aspect ratio
+6. `svg-pan-zoom` is initialized on the SVG with fit + center
+7. Zoom controls, fullscreen button, and resize handle are added
+8. A `ResizeObserver` watches the container so dragging the resize handle re-fits the diagram
 
 ## Full example
 
@@ -99,22 +111,21 @@ The accent color used for hover borders and button highlights can be customized 
 <html>
 <head>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-mermaid-zoom/dist/docsify-mermaid-zoom.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chadfurman/docsify-mermaid-zoom@2/dist/docsify-mermaid-zoom.css">
 </head>
 <body>
   <div id="app"></div>
   <script>
     window.$docsify = {
       loadSidebar: true,
-      mermaidZoom: { maxHeight: 600 }
+      mermaidZoom: {
+        maxHeight: 600,
+        mermaidConfig: { theme: 'default' }
+      }
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/docsify-mermaid@2/dist/docsify-mermaid.js"></script>
-  <script>mermaid.initialize({ startOnLoad: false });</script>
-  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/docsify-mermaid-zoom/dist/docsify-mermaid-zoom.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@chadfurman/docsify-mermaid-zoom@2/dist/docsify-mermaid-zoom.js"></script>
 </body>
 </html>
 ```
@@ -131,6 +142,27 @@ graph TD
     D --> E
 ```
 ````
+
+## Migrating from v1.x
+
+v2.0 is a breaking change that simplifies setup. Remove the old dependency lines:
+
+```diff
+  <link rel="stylesheet" href="...docsify-mermaid-zoom.css">
+- <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+- <script src="https://cdn.jsdelivr.net/npm/docsify-mermaid@2/dist/docsify-mermaid.js"></script>
+- <script>mermaid.initialize({ startOnLoad: false });</script>
+- <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <script src="...docsify-mermaid-zoom.js"></script>
+```
+
+If you were passing options to `mermaid.initialize()`, move them to `mermaidConfig`:
+
+```javascript
+mermaidZoom: {
+  mermaidConfig: { theme: 'neutral' }
+}
+```
 
 ## License
 

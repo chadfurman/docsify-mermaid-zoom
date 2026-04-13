@@ -108,23 +108,17 @@ graph TB
 
 ## Installation
 
+Just two lines — the plugin auto-loads mermaid and svg-pan-zoom:
+
 ```html
-<!-- CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-mermaid-zoom/dist/docsify-mermaid-zoom.css">
-
-<!-- Dependencies (load first) -->
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify-mermaid@2/dist/docsify-mermaid.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-
-<!-- Plugin -->
-<script src="https://cdn.jsdelivr.net/npm/docsify-mermaid-zoom/dist/docsify-mermaid-zoom.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chadfurman/docsify-mermaid-zoom@2/dist/docsify-mermaid-zoom.css">
+<script src="https://cdn.jsdelivr.net/npm/@chadfurman/docsify-mermaid-zoom@2/dist/docsify-mermaid-zoom.js"></script>
 ```
 
 Or install via npm:
 
 ```bash
-npm install docsify-mermaid-zoom
+npm install @chadfurman/docsify-mermaid-zoom
 ```
 
 See the full [README](https://github.com/chadfurman/docsify-mermaid-zoom) for configuration options.

@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0 (2026-04-12)
+
+### Breaking Changes
+- **Single-import setup**: Consumers now only need one CSS file and one JS file. The plugin auto-loads mermaid and svg-pan-zoom from CDN if not already present.
+- **Inlined docsify-mermaid**: The `docsify-mermaid` package is no longer needed as a separate dependency. Its mermaid code-block rendering is now built into this plugin.
+- **Removed `docsify-mermaid` from peerDependencies**: No longer required.
+- **Moved `mermaid` and `svg-pan-zoom` to optionalDependencies**: They're auto-loaded from CDN but can be pre-loaded by the consumer to control versions.
+
+### Features
+- **Auto-dependency loading**: Mermaid and svg-pan-zoom are loaded from jsDelivr CDN automatically if not detected on the page.
+- **Mermaid config pass-through**: New `mermaidConfig` option in `window.$docsify.mermaidZoom` is passed directly to `mermaid.initialize()`.
+- **Automatic mermaid initialization**: The plugin calls `mermaid.initialize()` and `mermaid.run()` internally — no manual setup needed.
+
+### Migration
+Remove the old dependency script tags (mermaid, docsify-mermaid, svg-pan-zoom, mermaid.initialize) and just keep the two docsify-mermaid-zoom lines (CSS + JS). See README for details.
+
 ## 1.2.0 (2026-04-13)
 
 ### Features
